@@ -2215,6 +2215,7 @@ static int it8712f_gpio12_raise(void)
  * Suited for:
  * - ASUS A7V600-X: VIA KT600 + VT8237 + IT8712F
  * - ASUS A7V8X-X: VIA KT400 + VT8235 + IT8712F
+ * - ASUS M2N-MX: NVIDIA MCP61 + IT8712F
  */
 static int it8712f_gpio31_raise(void)
 {
@@ -2337,6 +2338,7 @@ const struct board_match board_matches[] = {
 	{0x10DE, 0x0260, 0x103c, 0x2a3e,  0x10DE, 0x0264, 0x103c, 0x2a3e, "NAGAMI2L",   NULL, NULL,           P3, "ASUS",        "A8N-LA (Nagami-GL8E)",  0,   OK, nvidia_mcp_gpio0_raise},
 	{0x10de, 0x0264, 0x1043, 0x81bc,  0x10de, 0x02f0, 0x1043, 0x81cd, NULL,         NULL, NULL,           P3, "ASUS",        "A8N-VM CSM",            0,   OK, w83627ehf_gpio22_raise_2e},
 	{0x8086, 0x65c0, 0x1043, 0x8301,  0x8086, 0x2916, 0x1043, 0x82a6, "^DSAN-DX$",  NULL, NULL,           P3, "ASUS",        "DSAN-DX",               0,   NT, intel_ich_gpio32_raise},
+	{0x10de, 0x03e0, 0x1043, 0x8234,  0x10de, 0x03f5, 0x1043, 0x8234, "^M2N-MX$",   NULL, NULL,           P3, "ASUS",        "M2N-MX",                0,   OK, it8712f_gpio31_raise},
 	{0x10DE, 0x0264, 0x1043, 0x81C0,  0x10DE, 0x0260, 0x1043, 0x81C0, NULL,         NULL, NULL,           P3, "ASUS",        "M2NBP-VM CSM",          0,   OK, nvidia_mcp_gpio0_raise},
 	{0x1106, 0x1336, 0x1043, 0x80ed,  0x1106, 0x3288, 0x1043, 0x8249, NULL,         NULL, NULL,           P3, "ASUS",        "M2V-MX",                0,   OK, via_vt823x_gpio5_raise},
 	{0x8086, 0x24cc,      0,      0,  0x8086, 0x24c3, 0x1043, 0x1869, "^M6Ne$",     NULL, NULL,           P3, "ASUS",        "M6Ne",                  0,   NT, intel_ich_gpio43_raise},

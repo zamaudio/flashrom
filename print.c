@@ -649,6 +649,7 @@ const struct board_info boards_known[] = {
 	B("ASUS",	"M2N68-VM",		OK, "http://www.asus.com/Motherboards/AMD_AM2Plus/M2N68VM/", NULL),
 	B("ASUS",	"M2N-E",		OK, "http://www.asus.com/Motherboards/AMD_AM2/M2NE/", "If the machine doesn't come up again after flashing, try resetting the NVRAM(CMOS). The MAC address of the onboard network card will change to the value stored in the new image, so backup the old address first. See http://www.flashrom.org/pipermail/flashrom/2009-November/000879.html"),
 	B("ASUS",	"M2N-E SLI",		OK, "http://www.asus.com/Motherboards/AMD_AM2/M2NE_SLI/", NULL),
+	B("ASUS",	"M2N-MX",		OK, "http://www.asus.com/Motherboards/AMD_AM2/M2NMX/", NULL),
 	B("ASUS",	"M2N-SLI Deluxe",	OK, "http://www.asus.com/Motherboards/AMD_AM2/M2NSLI_Deluxe/", NULL),
 	B("ASUS",	"M2NBP-VM CSM",		OK, "http://www.asus.com/Motherboards/AMD_AM2/M2NBPVM_CSM/", NULL),
 	B("ASUS",	"M2NPV-VM",		OK, "http://www.asus.com/Motherboards/AMD_AM2/M2NPVVM/", NULL),

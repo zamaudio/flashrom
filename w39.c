@@ -105,6 +105,7 @@ static uint8_t w39_idmode_readb(struct flashctx *flash, unsigned int offset)
 
 static int printlock_w39_tblwp(uint8_t lock)
 {
+	msg_cdbg("raw value of lock is 0x%02x\n", lock);
 	msg_cdbg("Hardware bootblock locking (#TBL) is %sactive.\n",
 		 (lock & (1 << 2)) ? "" : "not ");
 	msg_cdbg("Hardware remaining chip locking (#WP) is %sactive..\n",
@@ -140,6 +141,10 @@ static int printlock_w39_common(struct flashctx *flash, unsigned int offset)
 {
 	uint8_t lock;
 
+	lock = w39_idmode_readb(flash, 0x7fff2);
+	msg_cdbg("raw value of lock at 0x7fff2 is 0x%02x\n", lock);
+	lock = w39_idmode_readb(flash, 0xfff2);
+	msg_cdbg("raw value of lock at 0xfff2 is 0x%02x\n", lock);
 	lock = w39_idmode_readb(flash, offset);
 	msg_cdbg("Lockout bits:\n");
 	return printlock_w39_tblwp(lock);

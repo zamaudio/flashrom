@@ -43,12 +43,6 @@
 
 fdtype sp_fd = SER_INV_FD;
 
-void __attribute__((noreturn)) sp_die(char *msg)
-{
-	perror(msg);
-	exit(1);
-}
-
 #ifdef _WIN32
 struct baudentry {
 	DWORD flag;
@@ -142,7 +136,7 @@ const struct baudentry *round_baud(unsigned int baud)
 /* Uses msg_perr to print the last system error.
  * Prints "Error: " followed first by \c msg and then by the description of the last error retrieved via
  * strerror() or FormatMessage() and ending with a linebreak. */
-static void msg_perr_strerror(const char *msg)
+void msg_perr_strerror(const char *msg)
 {
 	msg_perr("Error: %s", msg);
 #ifdef _WIN32

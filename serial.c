@@ -3,6 +3,7 @@
  *
  * Copyright (C) 2009 Urja Rannikko <urjaman@gmail.com>
  * Copyright (C) 2009,2010 Carl-Daniel Hailfinger
+ * Copyright (C) 2013 Stefan Tauner
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +29,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <stdbool.h>
 #ifdef _WIN32
 #include <conio.h>
 #else
@@ -328,66 +330,59 @@ int serialport_shutdown(void *data)
 	return 0;
 }
 
-int serialport_write(unsigned char *buf, unsigned int writecnt)
+#define EMPTY_TRIES 10
+/* Writes (if \c outdir is true) or reads \c todo bytes from/into \c buf.
+ * Tries up to \c EMPTY_TRIES times with a timeout of \c ms ms between each try. */
+static int serialport_rw(unsigned char *buf, unsigned int todo, bool outdir, unsigned int ms)
 {
-#ifdef _WIN32
-	DWORD tmp = 0;
-#else
-	ssize_t tmp = 0;
-#endif
-	unsigned int empty_writes = 250; /* results in a ca. 125ms timeout */
+	const char * const op = outdir ? "write" : "read";
+	bool err = false;
+	unsigned int empty_tries = EMPTY_TRIES;
 
-	while (writecnt > 0) {
+	while (todo > 0) {
 #ifdef _WIN32
-		WriteFile(sp_fd, buf, writecnt, &tmp, NULL);
+		DWORD cur = 0;
+		if (outdir)
+			err = !WriteFile(sp_fd, buf, todo, &cur, NULL);
+		else
+			err = !ReadFile(sp_fd, buf, todo, &cur, NULL);
 #else
-		tmp = write(sp_fd, buf, writecnt);
+		ssize_t cur = 0;
+		if (outdir)
+			err = (cur = write(sp_fd, buf, todo)) < 0;
+		else
+			err = (cur = read(sp_fd, buf, todo)) < 0;
 #endif
-		if (tmp == -1) {
-			msg_perr("Serial port write error!\n");
+		if (err) {
+			msg_perr("Serial port %s error!\n", op);
 			return 1;
 		}
-		if (!tmp) {
-			msg_pdbg2("Empty write\n");
-			empty_writes--;
-			programmer_delay(500);
-			if (empty_writes == 0) {
-				msg_perr("Serial port is unresponsive!\n");
+		if (cur == 0) {
+			msg_pdbg2("Empty %s.\n", op);
+			empty_tries--;
+			programmer_delay(ms * 1000);
+			if (empty_tries == 0) {
+				msg_perr("Serial port is unresponsive or disappeared!\n");
 				return 1;
 			}
+			continue;
 		}
-		writecnt -= tmp;
-		buf += tmp;
+		todo -= cur;
+		buf += cur;
+		empty_tries = EMPTY_TRIES;
 	}
 
 	return 0;
 }
 
+int serialport_write(unsigned char *buf, unsigned int writecnt)
+{
+	return serialport_rw(buf, writecnt, true, 1);
+}
+
 int serialport_read(unsigned char *buf, unsigned int readcnt)
 {
-#ifdef _WIN32
-	DWORD tmp = 0;
-#else
-	ssize_t tmp = 0;
-#endif
-
-	while (readcnt > 0) {
-#ifdef _WIN32
-		ReadFile(sp_fd, buf, readcnt, &tmp, NULL);
-#else
-		tmp = read(sp_fd, buf, readcnt);
-#endif
-		if (tmp == -1) {
-			msg_perr("Serial port read error!\n");
-			return 1;
-		}
-		if (!tmp)
-			msg_pdbg2("Empty read\n");
-		readcnt -= tmp;
-		buf += tmp;
-	}
-
-	return 0;
+	return serialport_rw(buf, readcnt, false, 10);
 }
 
 /* Tries up to timeout ms to read readcnt characters and places them into the array starting at c. Returns

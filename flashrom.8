@@ -345,6 +345,20 @@ syntax. The user is responsible for supplying a suitable image or leaving out th
 a layout file. This limitation might be removed in the future when we understand the details better and have
 received enough feedback from users. Please report the outcome if you had to use this option to write a chip.
 .sp
+An optional
+.B spispeed
+parameter specifies the frequency of the SPI bus where applicable (i.e.\& SB600 or later with SPI flash chip
+directly attached to the chipset).
+Syntax is
+.sp
+.B "  flashrom \-p internal:spispeed=frequency"
+.sp
+where
+.B frequency
+can be
+.BR 16.5 ", " 22 ", " 33 " or " 66/reserved "
+(in MHz). The default is to not change the preset value. The use of this parameter also disables Fast Reads.
+.sp
 .TP
 .B Intel chipsets
 .sp

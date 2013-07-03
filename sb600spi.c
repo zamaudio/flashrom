@@ -239,15 +239,41 @@ static const struct spi_programmer spi_programmer_sb600 = {
 	.write_aai = default_spi_write_aai,
 };
 
+struct spispeed {
+	const char *const name;
+	const int8_t speed;
+};
+
 int sb600_probe_spi(struct pci_dev *dev)
 {
 	struct pci_dev *smbus_dev;
 	uint32_t tmp;
 	uint8_t reg;
 	bool amd_imc_force = false;
-	static const char *const speed_names[4] = {
-		"66/reserved", "33", "22", "16.5"
+	int8_t spispeed_idx = -1;
+	static const struct spispeed spispeeds[] = {
+		{ "66/reserved",	0x00 },
+		{ "33",			0x01 },
+		{ "22",			0x02 },
+		{ "16.5",		0x03 },
 	};
+	
+	char *spispeed = extract_programmer_param("spispeed");
+	if (spispeed != NULL) {
+		int i;
+		for (i = 0; i < ARRAY_SIZE(spispeeds); i++) {
+			if (!strcasecmp(spispeeds[i].name, spispeed)) {
+				spispeed_idx = i;
+				break;
+			}
+		}
+		if (spispeed_idx < 0) {
+			msg_perr("Error: Invalid spispeed value: '%s'.\n", spispeed);
+			free(spispeed);
+			return 1;
+		}
+		free(spispeed);
+	}
 
 	char *arg = extract_programmer_param("amd_imc_force");
 	if (arg && !strcmp(arg, "yes")) {
@@ -293,9 +319,18 @@ int sb600_probe_spi(struct pci_dev *dev)
 	 * Set bit 5, otherwise SPI accesses are pointless in LPC mode.
 	 * See doc 42413 AMD SB700/710/750 RPR.
 	 */
-	msg_pdbg("PrefetchEnSPIFromHost=%i, SpiOpEnInLpcMode=%i\n",
-		     tmp & 0x1, (tmp & 0x20) >> 5);
-	tmp = mmio_readl(sb600_spibar);
+	msg_pdbg("PrefetchEnSPIFromHost=%i, SpiOpEnInLpcMode=%i\n", tmp & 0x1, (tmp & 0x20) >> 5);
+
+	if (spispeed_idx >= 0) {
+		uint8_t speed = spispeeds[spispeed_idx].speed;
+		msg_pdbg("Setting SPI clock to %s MHz (0x%x) and disabling fast reads...",
+			 spispeeds[spispeed_idx].name, speed);
+		rmmio_writeb((mmio_readb(sb600_spibar + 0xd) & ~(0x3 << 4)) | (speed << 4), sb600_spibar + 0xd);
+		rmmio_writel(mmio_readl(sb600_spibar + 0x0) & ~(0x1 << 18), sb600_spibar + 0x0);
+		msg_pdbg(" done\n");
+	}
+
+	tmp = mmio_readl(sb600_spibar + 0x0);
 	/* FIXME: If SpiAccessMacRomEn or SpiHostAccessRomEn are zero on
 	 * SB700 or later, reads and writes will be corrupted. Abort in this
 	 * case. Make sure to avoid this check on SB600.
@@ -308,7 +343,7 @@ int sb600_probe_spi(struct pci_dev *dev)
 		     (tmp >> 23) & 0x1, (tmp >> 24) & 0x7,
 		     (tmp >> 27) & 0x1, (tmp >> 28) & 0x1);
 	tmp = (mmio_readb(sb600_spibar + 0xd) >> 4) & 0x3;
-	msg_pdbg("NormSpeed is %s MHz\n", speed_names[tmp]);
+	msg_pdbg("NormSpeed is %s MHz\n", spispeeds[tmp].name);
 
 	/* Look for the SMBus device. */
 	smbus_dev = pci_dev_find(0x1002, 0x4385);

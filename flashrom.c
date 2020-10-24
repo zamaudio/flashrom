@@ -1539,10 +1539,21 @@ static int read_by_layout(struct flashctx *const flashctx, uint8_t *const buffer
 {
 	const struct flashrom_layout *const layout = get_layout(flashctx);
 	const struct romentry *entry = NULL;
+	int ret;
 
 	while ((entry = layout_next_included(layout, entry))) {
 		const chipoff_t region_start	= entry->start;
 		const chipsize_t region_len	= entry->end - entry->start + 1;
+
+		if (flashctx->mst->buses_supported & BUS_PROG) {
+			ret = check_access_opaque(flashctx, region_start, region_len, 0);
+			if (!ret)
+				continue;
+		} else if (flashctx->mst->buses_supported & BUS_SPI) {
+			ret = check_access_spi(flashctx, region_start, region_len, 0);
+			if (!ret)
+				continue;
+		}
 
 		if (flashctx->chip->read(flashctx, buffer + region_start, region_start, region_len))
 			return 1;

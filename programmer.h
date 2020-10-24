@@ -634,6 +634,7 @@ struct spi_master {
 	int (*read)(struct flashctx *flash, uint8_t *buf, unsigned int start, unsigned int len);
 	int (*write_256)(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
 	int (*write_aai)(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
+	int (*check_access)(const struct flashctx *flash, unsigned int start, unsigned int len, int write);
 	const void *data;
 };
 
@@ -644,6 +645,7 @@ int default_spi_read(struct flashctx *flash, uint8_t *buf, unsigned int start, u
 int default_spi_write_256(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
 int default_spi_write_aai(struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
 int register_spi_master(const struct spi_master *mst);
+int check_access_spi(const struct flashctx *flash, unsigned int start, unsigned int len, int write);
 
 /* The following enum is needed by ich_descriptor_tool and ich* code as well as in chipset_enable.c. */
 enum ich_chipset {
@@ -722,6 +724,7 @@ struct opaque_master {
 	int (*read) (struct flashctx *flash, uint8_t *buf, unsigned int start, unsigned int len);
 	int (*write) (struct flashctx *flash, const uint8_t *buf, unsigned int start, unsigned int len);
 	int (*erase) (struct flashctx *flash, unsigned int blockaddr, unsigned int blocklen);
+	int (*check_access) (const struct flashctx *flash, unsigned int start, unsigned int len, int rw);
 	const void *data;
 };
 int register_opaque_master(const struct opaque_master *mst);

@@ -131,6 +131,13 @@ int spi_aai_write(struct flashctx *flash, const uint8_t *buf, unsigned int start
 	return flash->mst->spi.write_aai(flash, buf, start, len);
 }
 
+int check_access_spi(const struct flashctx *flash, unsigned int start, unsigned int len, int write)
+{
+	if (flash->mst->spi.check_access)
+		return flash->mst->spi.check_access(flash, start, len, write);
+	return 1;
+}
+
 int register_spi_master(const struct spi_master *mst)
 {
 	struct registered_master rmst;

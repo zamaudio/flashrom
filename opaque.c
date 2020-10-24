@@ -46,6 +46,13 @@ int erase_opaque(struct flashctx *flash, unsigned int blockaddr, unsigned int bl
 	return flash->mst->opaque.erase(flash, blockaddr, blocklen);
 }
 
+int check_access_opaque(const struct flashctx *flash, unsigned int start, unsigned int len, int write)
+{
+	if (flash->mst->opaque.check_access)
+		return flash->mst->opaque.check_access(flash, start, len, write);
+	return 1;
+}
+
 int register_opaque_master(const struct opaque_master *mst)
 {
 	struct registered_master rmst;
